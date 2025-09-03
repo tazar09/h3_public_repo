@@ -1,0 +1,524 @@
+import sys
+import math
+
+# The raw data now includes Gold Cost and Unit Type for all creatures.
+raw_creature_data = """Creature,Town,AI,Fight,Gold_Cost,Type
+Azure Dragon,Neutral,78845,56315,30000,Flyer
+Crystal Dragon,Neutral,39338,30260,20000,Flyer
+Faerie Dragon,Neutral,30501,16317,15000,Flyer
+Rust Dragon,Neutral,26433,24030,10000,Flyer
+Archangel,Castle,8776,6033,5000,Flyer
+Black Dragon,Dungeon,8721,6783,4000,Flyer
+Gold Dragon,Tower,8613,6220,5000,Flyer
+Titan,Tower,7500,5000,5000,Shooter
+Haspid,Fortress,7220,5554,2000,Infantry
+Arch Devil,Inferno,7115,5243,4500,Flyer
+Phoenix,Neutral,6721,4929,4000,Flyer
+Juggernaut,Forge,6433,5361,2500,Infantry
+Ancient Behemoth,Stronghold,6168,5397,2500,Infantry
+Chaos Hydra,Stronghold,5931,5272,3000,Infantry
+Crimson Couatl,Neutral,5341,3815,1000,Flyer
+Devil,Inferno,5101,3759,2000,Flyer
+Angel,Castle,5019,3585,3000,Flyer
+Red Dragon,Dungeon,5003,3762,2500,Flyer
+Ghost Dragon,Necropolis,4919,3228,3000,Flyer
+Green Dragon,Rampart,4872,3654,2500,Flyer
+Firebird,Neutral,4336,3097,2000,Flyer
+Hydra,Stronghold,4120,4120,2000,Infantry
+Sea Serpent,Forge,3953,3162,1500,Infantry
+Dreadnought,Cove,3879,3879,2000,Infantry
+Giant,Tower,3718,3146,2000,Shooter
+Couatl,Fortress,3574,2521,1200,Flyer
+Bone Dragon,Necropolis,3388,2420,1500,Infantry
+Behemoth,Stronghold,3162,3162,1500,Infantry
+Naga Queen,Tower,2840,2840,2000,Infantry
+Dread Knight,Necropolis,2382,2029,1800,Infantry
+Efreet Sultan,Fortress,2343,1802,1600,Infantry
+Nix Warrior,Cove,2116,1763,1200,Infantry
+Champion,Castle,2100,1800,1600,Infantry
+Black Knight,Necropolis,2087,1753,1200,Infantry
+War Unicorn,Rampart,2030,2030,1000,Infantry
+Magic Elemental,Conflux,2012,1724,1500,Infantry
+Cavalier,Castle,1946,1668,1000,Infantry
+Naga,Tower,1814,2016,1200,Infantry
+Unicorn,Rampart,1806,1548,900,Infantry
+Efreeti,Fortress,1670,1413,1000,Infantry
+Scorpicore,Fortress,1685,1248,1500,Flyer
+Psychic Elemental,Conflux,1669,1431,1000,Infantry
+Manticore,Fortress,1547,1215,800,Flyer
+Cyclops King,Stronghold,1544,1110,1200,Shooter
+Wyvern Monarch,Neutral,1518,1518,1500,Flyer
+Bounty Hunter,Forge,1454,932,1000,Shooter
+Nix,Cove,1415,1415,800,Infantry
+Gunslinger,Forge,1351,904,750,Shooter
+Wyvern,Neutral,1350,1050,900,Flyer
+Cyclops,Stronghold,1266,1055,800,Shooter
+Pit Lord,Inferno,1224,1071,700,Infantry
+OlgoiKhorkhoi,Stronghold,1220,894,800,Infantry
+Enchanter,Forge,1210,805,750,Infantry
+Thunderbird,Neutral,1106,869,700,Flyer
+Power Lich,Necropolis,1079,889,650,Shooter
+Minotaur King,Dungeon,1068,890,750,Infantry
+Mighty Gorgon,Fortress,1028,1028,750,Infantry
+Roc,Stronghold,1027,790,600,Flyer
+Troll,Fortress,1024,1024,800,Infantry
+Sandworm,Neutral,991,793,600,Infantry
+Sentinel Automaton,Neutral,947,631,650,Infantry
+Master Genie,Tower,942,748,700,Infantry
+Fangarm,Cove,929,929,650,Infantry
+Gorgon,Fortress,890,890,600,Infantry
+Genie,Tower,884,680,600,Infantry
+Sorceress,Neutral,852,655,500,Shooter
+Lich,Necropolis,848,742,550,Shooter
+Minotaur,Dungeon,835,835,600,Infantry
+Cannon,Cove,825,900,500,Artillery
+Dendroid Soldier,Rampart,803,765,650,Infantry
+Sea Witch,Cove,790,608,500,Shooter
+Vampire Lord,Necropolis,783,652,500,Flyer
+Diamond Golem,Neutral,775,775,600,Infantry
+Pit Fiend,Inferno,765,765,500,Infantry
+Zealot,Castle,750,500,750,Shooter
+Greater Basilisk,Fortress,714,561,650,Infantry
+Arch Mage,Tower,680,467,600,Shooter
+Ogre Mage,Stronghold,672,672,400,Infantry
+Automaton,Neutral,669,398,400,Infantry
+Ayssid,Forge,645,478,500,Infantry
+Sea Dog,Cove,602,376,400,Infantry
+Gold Golem,Tower,600,600,400,Infantry
+Ballista,Neutral,600,650,400,Artillery
+Steel Golem,Neutral,597,597,350,Infantry
+Crusader,Castle,588,588,400,Infantry
+Sharpshooter,Forge,585,415,350,Shooter
+Monk,Castle,582,485,400,Shooter
+Medusa Queen,Dungeon,577,423,400,Shooter
+Mage,Tower,570,418,400,Shooter
+Vampire,Necropolis,555,518,300,Flyer
+Basilisk,Fortress,552,506,350,Infantry
+Silver Pegasus,Rampart,532,418,350,Flyer
+Satyr,Neutral,518,471,200,Infantry
+Pegasus,Rampart,518,407,250,Flyer
+Dendroid Guard,Rampart,517,690,325,Infantry
+Medusa,Dungeon,517,379,300,Shooter
+Stormbird,Neutral,502,386,300,Flyer
+Catapult,Neutral,500,10,250,Artillery
+Magma Elemental,Conflux,490,490,400,Infantry
+Storm Elemental,Conflux,486,324,300,Flyer
+Horned Demon,Inferno,480,480,250,Infantry
+Energy Elemental,Conflux,470,360,250,Shooter
+Royal Griffin,Castle,448,364,250,Flyer
+Swordsman,Castle,445,445,300,Infantry
+Demon,Inferno,445,445,200,Infantry
+Ogre,Stronghold,416,520,300,Infantry
+Iron Golem,Tower,412,412,300,Infantry
+Corsair,Cove,407,311,200,Infantry
+Ammo Cart,Neutral,400,5,200,Artillery
+Arrow Tower,Neutral,400,5,100,Artillery
+Cerberus,Inferno,392,308,250,Infantry
+Ice Elemental,Conflux,380,315,250,Infantry
+Evil Eye,Dungeon,367,245,250,Shooter
+Hell Hound,Inferno,357,275,200,Infantry
+Air Elemental,Conflux,356,324,250,Infantry
+Griffin,Castle,351,324,200,Flyer
+Fire Elemental,Conflux,345,345,250,Infantry
+Nomad,Neutral,345,415,200,Infantry
+Beholder,Dungeon,336,240,200,Shooter
+Grand Elf,Rampart,331,195,200,Shooter
+Earth Elemental,Conflux,330,415,250,Infantry
+Wraith,Necropolis,315,252,200,Infantry
+Water Elemental,Conflux,315,315,250,Infantry
+Dragon Fly,Fortress,312,250,150,Flyer
+Pirate,Cove,312,208,100,Infantry
+First Aid Tent,Neutral,300,10,100,Artillery
+Engineer,Forge,278,232,200,Infantry
+Mummy,Necropolis,270,270,180,Infantry
+Serpent Fly,Fortress,268,215,100,Flyer
+Bellwether Armadillo,Neutral,256,256,200,Infantry
+Wight,Necropolis,252,231,160,Infantry
+Stone Golem,Tower,250,339,150,Infantry
+Magog,Inferno,240,210,150,Shooter
+Orc Chieftain,Stronghold,240,200,100,Shooter
+Harpy Hag,Dungeon,238,196,150,Flyer
+Wood Elf,Rampart,234,195,150,Shooter
+Battle Dwarf,Fortress,209,209,100,Infantry
+Leprechaun,Neutral,190,190,100,Infantry
+Wolf Raider,Stronghold,203,174,100,Infantry
+Obsidian Gargoyle,Dungeon,201,155,100,Infantry
+Armadillo,Neutral,198,248,150,Infantry
+Orc,Stronghold,192,175,80,Shooter
+Mechanic,Forge,186,186,120,Infantry
+Marksman,Rampart,184,115,100,Shooter
+Seaman,Cove,174,174,75,Infantry
+Stone Gargoyle,Dungeon,165,150,90,Infantry
+Gog,Inferno,159,159,75,Shooter
+Lizard Warrior,Fortress,209,174,100,Infantry
+Crew Mate,Cove,155,155,50,Infantry
+Harpy,Dungeon,154,140,100,Flyer
+Boar,Stronghold,145,145,50,Infantry
+Dwarf,Fortress,138,194,80,Infantry
+Centaur Captain,Rampart,138,115,70,Infantry
+Rogue,Neutral,135,135,50,Infantry
+Wolf Rider,Stronghold,130,130,60,Infantry
+Zombie,Necropolis,128,160,50,Infantry
+Archer,Castle,126,115,70,Shooter
+Lizardman,Fortress,151,137,60,Infantry
+Halberdier,Castle,115,115,100,Infantry
+Centaur,Rampart,100,100,60,Infantry
+Walking Dead,Necropolis,98,140,50,Infantry
+Halfling Grenadier,Neutral,95,76,30,Shooter
+Sprite,Rampart,95,70,40,Flyer
+Gnoll Marauder,Fortress,90,90,50,Infantry
+Skeleton Warrior,Necropolis,85,85,50,Infantry
+Infernal Troglodyte,Inferno,84,84,60,Infantry
+Pikeman,Castle,80,100,60,Infantry
+Hobgoblin,Stronghold,78,65,40,Infantry
+Halfling,Neutral,75,60,20,Shooter
+Oceanid,Cove,75,60,30,Infantry
+Master Gremlin,Tower,66,55,30,Infantry
+Familiar,Inferno,60,60,25,Infantry
+Goblin,Stronghold,60,60,20,Infantry
+Skeleton,Necropolis,60,75,25,Infantry
+Troglodyte,Inferno,59,73,50,Infantry
+Nymph,Rampart,57,52,20,Infantry
+Gnoll,Fortress,56,70,30,Infantry
+Pixie,Conflux,55,40,30,Flyer
+Imp,Inferno,50,50,20,Infantry
+Gremlin,Tower,44,55,30,Infantry
+Peasant,Castle,15,15,10,Infantry
+"""
+
+# Dictionaries to be populated with creature values
+ai_values = {}
+fight_values = {}
+creature_towns = {}
+creature_costs = {}
+creature_types = {}
+
+def load_creature_data(data):
+    """
+    Parses a CSV-like string to populate the creature value dictionaries,
+    including gold cost and creature type.
+    """
+    global ai_values, fight_values, creature_towns, creature_costs, creature_types
+    lines = data.strip().split('\n')
+    # Skip the header row
+    for line in lines[1:]:
+        parts = line.split(',')
+        if len(parts) < 6:
+            continue
+        # Clean the name by removing extra text and spaces
+        name = parts[0].strip().replace(" Horn of the Abyss", "")
+        town = parts[1].strip()
+        try:
+            ai_val = int(parts[2].strip())
+            fight_val = int(parts[3].strip())
+            cost = int(parts[4].strip())
+            unit_type = parts[5].strip()
+            
+            ai_values[name] = ai_val
+            fight_values[name] = fight_val
+            creature_towns[name] = town
+            creature_costs[name] = cost
+            creature_types[name] = unit_type
+        except (ValueError, IndexError):
+            # Skip invalid lines
+            continue
+
+def calculate_army_strengths(army, hero_attack, hero_defense):
+    """
+    Calculates both the AI and Fight army strength values for a player's army
+    and hero.
+
+    Args:
+        army (dict): A dictionary where keys are unit names (strings) and values
+                     are the number of units in the stack (integers).
+        hero_attack (int): The hero's attack skill value.
+        hero_defense (int): The hero's defense skill value.
+
+    Returns:
+        dict: A dictionary containing the calculated 'ai_strength', 'fight_strength',
+              town and type breakdowns, and total gold cost.
+    
+    Raises:
+        ValueError: If a unit name provided in the army dictionary is not recognized.
+    """
+    # Calculate hero's strength value (H)
+    hero_strength = math.sqrt((1 + 0.05 * hero_attack) * (1 + 0.05 * hero_defense))
+
+    # Initialize strength and cost accumulators
+    town_ai_values = {}
+    town_fight_values = {}
+    type_ai_values = {}
+    type_fight_values = {}
+    total_gold_cost = 0
+
+    # Calculate the base AI and Fight values of the army
+    base_ai_value = 0
+    base_fight_value = 0
+
+    for unit, count in army.items():
+        if unit not in ai_values:
+            raise ValueError(f"Unrecognized unit: '{unit}'")
+        
+        base_ai_value += ai_values[unit] * count
+        base_fight_value += fight_values[unit] * count
+        total_gold_cost += creature_costs[unit] * count
+
+        # Add values to town accumulators
+        town = creature_towns.get(unit, 'Unknown')
+        town_ai_values[town] = town_ai_values.get(town, 0) + (ai_values[unit] * count)
+        town_fight_values[town] = town_fight_values.get(town, 0) + (fight_values[unit] * count)
+        
+        # Add values to unit type accumulators
+        unit_type = creature_types.get(unit, 'Unknown')
+        type_ai_values[unit_type] = type_ai_values.get(unit_type, 0) + (ai_values[unit] * count)
+        type_fight_values[unit_type] = type_fight_values.get(unit_type, 0) + (fight_values[unit] * count)
+
+    
+    # Calculate final army strength
+    ai_strength = base_ai_value * hero_strength
+    fight_strength = base_fight_value * hero_strength
+    
+    return {
+        'ai_strength': ai_strength, 
+        'fight_strength': fight_strength,
+        'town_ai_values': town_ai_values,
+        'town_fight_values': town_fight_values,
+        'type_ai_values': type_ai_values,
+        'type_fight_values': type_fight_values,
+        'total_gold_cost': total_gold_cost
+    }
+
+def get_hero_data(hero_name):
+    """Prompts the user for a hero's stats and army and returns the processed data."""
+    print(f"\n--- Entering data for {hero_name} ---")
+    
+    try:
+        hero_attack = int(input(f"Enter {hero_name}'s attack skill value: "))
+        hero_defense = int(input(f"Enter {hero_name}'s defense skill value: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid number for hero stats.")
+        sys.exit()
+
+    my_army = {}
+    print(f"Enter {hero_name}'s units and their count (e.g., 'Archangel 5').")
+    print("Type 'list' to see all available units or 'done' when finished.")
+    
+    while True:
+        user_input = input("> ").strip()
+        
+        if user_input.lower() == 'done':
+            break
+        elif user_input.lower() == 'list':
+            print("\n--- Available Units ---")
+            print(f"{'Creature':<25}{'Town':<15}{'Cost':<10}{'Type':<15}")
+            print("-" * 65)
+            unit_list = sorted(list(ai_values.keys()))
+            for unit in unit_list:
+                print(f"{unit:<25}{creature_towns.get(unit, 'N/A'):<15}{creature_costs.get(unit, 'N/A'):<10}{creature_types.get(unit, 'N/A'):<15}")
+            print("-----------------------")
+            continue
+        
+        parts = user_input.split()
+        if len(parts) < 2:
+            print("Invalid format. Please enter 'Unit Name Count' (e.g., 'Archangel 5').")
+            continue
+
+        unit_name = ' '.join(parts[:-1]).strip()
+        try:
+            count = int(parts[-1])
+        except ValueError:
+            print("Invalid count. Please enter a number.")
+            continue
+        
+        if unit_name not in ai_values:
+            print(f"Unrecognized unit: '{unit_name}'. Please re-enter the unit and count, or type 'list' to see all units.")
+            continue
+
+        my_army[unit_name] = count
+
+    if not my_army:
+        print("No units entered. Cannot calculate army strength.")
+        return None, None, None
+
+    return hero_attack, hero_defense, my_army
+
+def create_pandas_like_table(hero_name, army):
+    """
+    Generates and prints a formatted table that mimics a pandas DataFrame for a single hero's army.
+    """
+    print(f"\n--- {hero_name} Army Composition ---")
+    print(f"{'Unit':<25}{'Count':<10}{'AI Value':<15}{'Fight Value':<15}{'Gold Cost':<15}")
+    print("-" * 80)
+    for unit, count in army.items():
+        ai_val = ai_values[unit] * count
+        fight_val = fight_values[unit] * count
+        cost = creature_costs[unit] * count
+        print(f"{unit:<25}{count:<10,}{ai_val:<15,}{fight_val:<15,}{cost:<15,}")
+    print("-" * 80)
+
+
+def create_comparison_table(hero1_data, hero2_data):
+    """
+    Generates and prints a formatted comparison table for two heroes' armies,
+    now including a breakdown by unit type and town.
+    """
+    
+    hero1_name = "Hero 1"
+    hero2_name = "Hero 2"
+    
+    print("\n\n--- Army Comparison ---")
+    print(f"{'Metric':<30}{hero1_name:<20}{hero2_name:<20}")
+    print("-" * 70)
+    
+    # Total Strength
+    ai_winner = hero1_data['ai_strength'] > hero2_data['ai_strength']
+    fight_winner = hero1_data['fight_strength'] > hero2_data['fight_strength']
+    
+    # Calculate Cost Efficiency
+    cost_efficiency1 = 0
+    if hero1_data['total_gold_cost'] > 0:
+        cost_efficiency1 = hero1_data['ai_strength'] / hero1_data['total_gold_cost']
+        
+    cost_efficiency2 = 0
+    if hero2_data['total_gold_cost'] > 0:
+        cost_efficiency2 = hero2_data['ai_strength'] / hero2_data['total_gold_cost']
+
+    print(f"{'Total AI Strength':<30}{round(hero1_data['ai_strength']):<20,}{round(hero2_data['ai_strength']):<20,}")
+    print(f"{'Total Fight Strength':<30}{round(hero1_data['fight_strength']):<20,}{round(hero2_data['fight_strength']):<20,}")
+    print(f"{'Total Gold Cost':<30}{hero1_data['total_gold_cost']:<20,}{hero2_data['total_gold_cost']:<20,}")
+    print(f"{'Cost Efficiency (AI/Gold)':<30}{cost_efficiency1:<20.2f}{cost_efficiency2:<20.2f}")
+    print("-" * 70)
+    
+    # Type Breakdown (sorted by keys to ensure consistent order)
+    all_types = sorted(list(set(hero1_data['type_ai_values'].keys()) | set(hero2_data['type_ai_values'].keys())))
+    
+    print(f"{'AI Value Breakdown by Type':<70}")
+    print(f"{'Type':<15}{'H1 Value':<15}{'H1 %':<10}{'H2 Value':<15}{'H2 %':<10}")
+    
+    total_ai1 = sum(hero1_data['type_ai_values'].values())
+    total_ai2 = sum(hero2_data['type_ai_values'].values())
+
+    for unit_type in all_types:
+        val1 = hero1_data['type_ai_values'].get(unit_type, 0)
+        perc1 = (val1 / total_ai1) * 100 if total_ai1 > 0 else 0
+        val2 = hero2_data['type_ai_values'].get(unit_type, 0)
+        perc2 = (val2 / total_ai2) * 100 if total_ai2 > 0 else 0
+        print(f"{unit_type:<15}{val1:<15,}{perc1:<10.2f}{val2:<15,}{perc2:<10.2f}")
+    
+    print("-" * 70)
+
+    print(f"{'Fight Value Breakdown by Type':<70}")
+    print(f"{'Type':<15}{'H1 Value':<15}{'H1 %':<10}{'H2 Value':<15}{'H2 %':<10}")
+    
+    total_fight1 = sum(hero1_data['type_fight_values'].values())
+    total_fight2 = sum(hero2_data['type_fight_values'].values())
+
+    for unit_type in all_types:
+        val1 = hero1_data['type_fight_values'].get(unit_type, 0)
+        perc1 = (val1 / total_fight1) * 100 if total_fight1 > 0 else 0
+        val2 = hero2_data['type_fight_values'].get(unit_type, 0)
+        perc2 = (val2 / total_fight2) * 100 if total_fight2 > 0 else 0
+        print(f"{unit_type:<15}{val1:<15,}{perc1:<10.2f}{val2:<15,}{perc2:<10.2f}")
+    
+    print("-" * 70)
+    
+    # Town Breakdown (sorted by keys)
+    all_towns = sorted(list(set(hero1_data['town_ai_values'].keys()) | set(hero2_data['town_ai_values'].keys())))
+
+    print(f"{'AI Value Breakdown by Town':<70}")
+    print(f"{'Town':<15}{'H1 Value':<15}{'H1 %':<10}{'H2 Value':<15}{'H2 %':<10}")
+    
+    for town in all_towns:
+        val1 = hero1_data['town_ai_values'].get(town, 0)
+        perc1 = (val1 / total_ai1) * 100 if total_ai1 > 0 else 0
+        val2 = hero2_data['town_ai_values'].get(town, 0)
+        perc2 = (val2 / total_ai2) * 100 if total_ai2 > 0 else 0
+        print(f"{town:<15}{val1:<15,}{perc1:<10.2f}{val2:<15,}{perc2:<10.2f}")
+    
+    print("-" * 70)
+
+    print(f"{'Fight Value Breakdown by Town':<70}")
+    print(f"{'Town':<15}{'H1 Value':<15}{'H1 %':<10}{'H2 Value':<15}{'H2 %':<10}")
+    
+    for town in all_towns:
+        val1 = hero1_data['town_fight_values'].get(town, 0)
+        perc1 = (val1 / total_fight1) * 100 if total_fight1 > 0 else 0
+        val2 = hero2_data['town_fight_values'].get(town, 0)
+        perc2 = (val2 / total_fight2) * 100 if total_fight2 > 0 else 0
+        print(f"{town:<15}{val1:<15,}{perc1:<10.2f}{val2:<15,}{perc2:<10.2f}")
+    
+    print("-" * 70)
+
+    print("Comparison notes:")
+    if ai_winner:
+        print(f"Based on AI Value, {hero1_name} has the stronger army.")
+    elif hero2_data['ai_strength'] > hero1_data['ai_strength']:
+        print(f"Based on AI Value, {hero2_name} has the stronger army.")
+    else:
+        print("Both armies have a similar AI Value.")
+
+    if fight_winner:
+        print(f"Based on Fight Value, {hero1_name} has the stronger army.")
+    elif hero2_data['fight_strength'] > hero1_data['fight_strength']:
+        print(f"Based on Fight Value, {hero2_name} has the stronger army.")
+    else:
+        print("Both armies have a similar Fight Value.")
+    
+    if cost_efficiency1 > cost_efficiency2:
+        print(f"Based on Cost Efficiency, {hero1_name}'s army is the better value for gold.")
+    elif cost_efficiency2 > cost_efficiency1:
+        print(f"Based on Cost Efficiency, {hero2_name}'s army is the better value for gold.")
+    else:
+        print("Both armies have similar Cost Efficiency.")
+
+    # New note for ranged power
+    shooter_value1 = hero1_data['type_ai_values'].get('Shooter', 0)
+    shooter_value2 = hero2_data['type_ai_values'].get('Shooter', 0)
+    
+    if shooter_value1 > shooter_value2:
+        if shooter_value2 == 0:
+            print(f"{hero1_name} has more ranged power, as {hero2_name} has no ranged units.")
+        else:
+            diff_percent = ((shooter_value1 - shooter_value2) / shooter_value2) * 100
+            print(f"{hero1_name} has more ranged power (more shooters value), by {diff_percent:.2f}%.")
+    elif shooter_value2 > shooter_value1:
+        if shooter_value1 == 0:
+            print(f"{hero2_name} has more ranged power, as {hero1_name} has no ranged units.")
+        else:
+            diff_percent = ((shooter_value2 - shooter_value1) / shooter_value1) * 100
+            print(f"{hero2_name} has more ranged power (more shooters value), by {diff_percent:.2f}%.")
+    else:
+        print("Both armies have a similar ranged power (shooters value).")
+
+
+if __name__ == "__main__":
+    load_creature_data(raw_creature_data)
+
+    print("Welcome to the Heroes 3 Army Comparator!")
+    print("We will calculate the strengths for two heroes and then compare them.")
+    print("Type 'list' to see all available units or 'done' when finished.")
+    
+    # Get data for Hero 1
+    hero1_attack, hero1_defense, army1 = get_hero_data("Hero 1")
+    if hero1_attack is None:
+        sys.exit()
+    
+    # Get data for Hero 2
+    hero2_attack, hero2_defense, army2 = get_hero_data("Hero 2")
+    if hero2_attack is None:
+        sys.exit()
+        
+    # Calculate strengths
+    try:
+        hero1_results = calculate_army_strengths(army1, hero1_attack, hero1_defense)
+        hero2_results = calculate_army_strengths(army2, hero2_attack, hero2_defense)
+
+        # Display supplementary pandas-like tables
+        create_pandas_like_table("Hero 1", army1)
+        create_pandas_like_table("Hero 2", army2)
+
+        # Display comparison table
+        create_comparison_table(hero1_results, hero2_results)
+
+    except ValueError as e:
+        print(f"An error occurred: {e}")
